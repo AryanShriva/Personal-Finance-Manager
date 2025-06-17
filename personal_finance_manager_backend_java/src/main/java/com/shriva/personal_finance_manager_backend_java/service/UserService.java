@@ -1,5 +1,6 @@
 package com.shriva.personal_finance_manager_backend_java.service;
 
+import com.shriva.personal_finance_manager_backend_java.dto.LoginRequest;
 import com.shriva.personal_finance_manager_backend_java.dto.RegisterRequest;
 import com.shriva.personal_finance_manager_backend_java.model.Role;
 import com.shriva.personal_finance_manager_backend_java.model.User;
@@ -7,6 +8,10 @@ import com.shriva.personal_finance_manager_backend_java.repository.RoleRepositor
 import com.shriva.personal_finance_manager_backend_java.repository.UserRepository;
 import com.shriva.personal_finance_manager_backend_java.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +29,9 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     public String registerUser(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -44,6 +52,16 @@ public class UserService {
 
         userRepository.save(user);
 
+        return jwtUtil.generateToken(user.getUsername(), user.getRole().getName());
+    }
+
+    public String loginUser(LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return jwtUtil.generateToken(user.getUsername(), user.getRole().getName());
     }
 }
