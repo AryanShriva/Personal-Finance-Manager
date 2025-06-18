@@ -1,6 +1,7 @@
 package com.shriva.personal_finance_manager_backend_java.service;
 
 import com.shriva.personal_finance_manager_backend_java.dto.LoginRequest;
+import com.shriva.personal_finance_manager_backend_java.dto.ProfileRequest;
 import com.shriva.personal_finance_manager_backend_java.dto.RegisterRequest;
 import com.shriva.personal_finance_manager_backend_java.model.Role;
 import com.shriva.personal_finance_manager_backend_java.model.User;
@@ -63,5 +64,25 @@ public class UserService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return jwtUtil.generateToken(user.getUsername(), user.getRole().getName());
+    }
+
+    public User getUserProfile(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User updateUserProfile(String username, ProfileRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            if (userRepository.existsByEmail(request.getEmail()) && !user.getEmail().equals(request.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(request.getEmail());
+        }
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        return userRepository.save(user);
     }
 }
