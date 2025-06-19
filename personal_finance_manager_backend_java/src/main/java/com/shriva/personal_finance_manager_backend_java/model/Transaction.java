@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions", schema = "personal_finance")
 @Getter
 @Setter
 public class Transaction {
@@ -21,21 +21,19 @@ public class Transaction {
     private User user;
 
     @Column(nullable = false)
-    private Double amount;
-
-    @Column(nullable = false)
-    private String category;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private TransactionType type;
-
-    @Column(nullable = false)
     private LocalDate date;
 
     private String description;
 
-    public enum TransactionType {
-        INCOME, EXPENSE
-    }
+    @Column(nullable = false)
+    private Double amount;
+
+    @Column(nullable = false)
+    private String type;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    private String notes;
 }
