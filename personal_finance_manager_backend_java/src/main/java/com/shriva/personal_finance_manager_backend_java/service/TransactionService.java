@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TransactionService {
 
@@ -17,5 +19,12 @@ public class TransactionService {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         transaction.setUser(user);
         return transactionRepository.save(transaction);
+    }
+
+    public List<Transaction> listTransactions() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return transactionRepository.findAll().stream()
+                .filter(t -> t.getUser().getId().equals(user.getId()))
+                .toList();
     }
 }
