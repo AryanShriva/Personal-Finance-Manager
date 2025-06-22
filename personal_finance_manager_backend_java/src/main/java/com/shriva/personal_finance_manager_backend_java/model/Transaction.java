@@ -1,39 +1,29 @@
 package com.shriva.personal_finance_manager_backend_java.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "transactions", schema = "personal_finance")
-@Getter
-@Setter
+@Table(name = "transactions")
+@Data
 public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Double amount;
+    private String type; // e.g., "EXPENSE" or "INCOME"
+    private LocalDate date;
+    private String category;
+    private String description;
+    private String notes;
+
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false)
-    private LocalDate date;
-
-    private String description;
-
-    @Column(nullable = false)
-    private Double amount;
-
-    @Column(nullable = false)
-    private String type;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
-
-    private String notes;
+    // Getters and Setters (provided by Lombok @Data)
 }
