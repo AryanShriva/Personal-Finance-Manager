@@ -7,10 +7,14 @@ import com.shriva.personal_finance_manager_backend_java.dto.RegisterRequest;
 import com.shriva.personal_finance_manager_backend_java.model.User;
 import com.shriva.personal_finance_manager_backend_java.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,11 +24,21 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-        String token = userService.registerUser(request);
-        AuthenticationResponse response = new AuthenticationResponse();
-        response.setToken(token);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
+        try {
+            userService.registerUser(request);
+            Map<String, String> response = new HashMap<>();
+            response.put("token", "dummy-token-for-now"); // Replace with actual JWT generation
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Registration failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @PostMapping("/login")

@@ -3,9 +3,11 @@ package com.shriva.personal_finance_manager_backend_java.controller;
 import com.shriva.personal_finance_manager_backend_java.model.Transaction;
 import com.shriva.personal_finance_manager_backend_java.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -37,5 +39,15 @@ public class TransactionController {
     public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
         transactionService.deleteTransaction(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<Transaction>> filterTransactions(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String type) {
+        List<Transaction> transactions = transactionService.filterTransactions(startDate, endDate, category, type);
+        return ResponseEntity.ok(transactions);
     }
 }

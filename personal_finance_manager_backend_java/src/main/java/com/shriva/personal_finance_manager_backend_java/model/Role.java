@@ -1,14 +1,13 @@
 package com.shriva.personal_finance_manager_backend_java.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "roles")
-@Getter
-@Setter
 public class Role {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
