@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -48,5 +49,25 @@ public class BudgetController {
             @RequestParam(required = false) String category) {
         List<Budget> budgets = budgetService.filterBudgets(startDate, endDate, category);
         return ResponseEntity.ok(budgets);
+    }
+
+    @GetMapping("/usage/{id}")
+    public ResponseEntity<Double> getBudgetUsage(@PathVariable Long id) {
+        double usage = budgetService.getBudgetUsage(id);
+        return ResponseEntity.ok(usage);
+    }
+
+    @GetMapping("/overspending/{id}")
+    public ResponseEntity<Boolean> isOverspending(@PathVariable Long id) {
+        boolean overspending = budgetService.isOverspending(id);
+        return ResponseEntity.ok(overspending);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<Map<String, Double>> getBudgetSummary(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        Map<String, Double> summary = budgetService.getBudgetSummary(startDate, endDate);
+        return ResponseEntity.ok(summary);
     }
 }

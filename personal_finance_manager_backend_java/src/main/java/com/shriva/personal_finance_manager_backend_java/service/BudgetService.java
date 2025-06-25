@@ -1,20 +1,27 @@
 package com.shriva.personal_finance_manager_backend_java.service;
 
 import com.shriva.personal_finance_manager_backend_java.model.Budget;
+import com.shriva.personal_finance_manager_backend_java.model.Transaction;
 import com.shriva.personal_finance_manager_backend_java.model.User;
 import com.shriva.personal_finance_manager_backend_java.repository.BudgetRepository;
+import com.shriva.personal_finance_manager_backend_java.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BudgetService {
 
     @Autowired
     private BudgetRepository budgetRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     public Budget addBudget(Budget budget) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -52,5 +59,41 @@ public class BudgetService {
     public List<Budget> filterBudgets(LocalDate startDate, LocalDate endDate, String category) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return budgetRepository.findByUserAndFilters(user, startDate, endDate, category);
+    }
+
+    public double getBudgetUsage(Long budgetId) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new RuntimeException("Budget not found: " + budgetId));
+        if (!budget.getUser().equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
+            throw new RuntimeException("Unauthorized to view this budget usage");
+        }
+        List<Transaction> transactions = transactionRepository.findByUserAndDateRangeAndCategory(
+                budget.getUser(), budget.getStartDate(), budget.getEndDate(), budget.getCategory());
+        return transactions.stream()
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+    }
+
+    public boolean isOverspending(Long budgetId) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new RuntimeException("Budget not found: " + budgetId));
+        double usage = getBudgetUsage(budgetId);
+        return usage > budget.getAmount();
+    }
+
+    public Map<String, Double> getBudgetSummary(LocalDate startDate, LocalDate endDate) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<Budget> budgets = budgetRepository.findByUserAndFilters(user, startDate, endDate, null);
+        double totalAllocated = budgets.stream().mapToDouble(Budget::getAmount).sum();
+        double totalSpent = budgets.stream()
+                .mapToDouble(budget -> getBudgetUsage(budget.getId()))
+                .sum();
+        double remaining = totalAllocated - totalSpent;
+
+        Map<String, Double> summary = new HashMap<>();
+        summary.put("totalAllocated", totalAllocated);
+        summary.put("totalSpent", totalSpent);
+        summary.put("remaining", remaining);
+        return summary;
     }
 }
