@@ -5,6 +5,8 @@ import com.shriva.personal_finance_manager_backend_java.model.Transaction;
 import com.shriva.personal_finance_manager_backend_java.model.User;
 import com.shriva.personal_finance_manager_backend_java.repository.BudgetRepository;
 import com.shriva.personal_finance_manager_backend_java.repository.TransactionRepository;
+import com.shriva.personal_finance_manager_backend_java.exception.ResourceNotFoundException;
+import com.shriva.personal_finance_manager_backend_java.exception.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -36,9 +38,9 @@ public class BudgetService {
 
     public Budget editBudget(Long id, Budget budgetDetails) {
         Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Budget not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Budget not found: " + id));
         if (!budget.getUser().equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
-            throw new RuntimeException("Unauthorized to edit this budget");
+            throw new UnauthorizedException("Unauthorized to edit this budget");
         }
         budget.setAmount(budgetDetails.getAmount());
         budget.setStartDate(budgetDetails.getStartDate());
@@ -49,9 +51,9 @@ public class BudgetService {
 
     public void deleteBudget(Long id) {
         Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Budget not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Budget not found: " + id));
         if (!budget.getUser().equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
-            throw new RuntimeException("Unauthorized to delete this budget");
+            throw new UnauthorizedException("Unauthorized to delete this budget");
         }
         budgetRepository.delete(budget);
     }
@@ -63,9 +65,9 @@ public class BudgetService {
 
     public double getBudgetUsage(Long budgetId) {
         Budget budget = budgetRepository.findById(budgetId)
-                .orElseThrow(() -> new RuntimeException("Budget not found: " + budgetId));
+                .orElseThrow(() -> new ResourceNotFoundException("Budget not found: " + budgetId));
         if (!budget.getUser().equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
-            throw new RuntimeException("Unauthorized to view this budget usage");
+            throw new UnauthorizedException("Unauthorized to view this budget usage");
         }
         List<Transaction> transactions = transactionRepository.findByUserAndDateRangeAndCategory(
                 budget.getUser(), budget.getStartDate(), budget.getEndDate(), budget.getCategory());
@@ -76,7 +78,7 @@ public class BudgetService {
 
     public boolean isOverspending(Long budgetId) {
         Budget budget = budgetRepository.findById(budgetId)
-                .orElseThrow(() -> new RuntimeException("Budget not found: " + budgetId));
+                .orElseThrow(() -> new ResourceNotFoundException("Budget not found: " + budgetId));
         double usage = getBudgetUsage(budgetId);
         return usage > budget.getAmount();
     }

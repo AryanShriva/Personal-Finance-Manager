@@ -6,6 +6,8 @@ import com.shriva.personal_finance_manager_backend_java.repository.TransactionRe
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.shriva.personal_finance_manager_backend_java.exception.ResourceNotFoundException;
+import com.shriva.personal_finance_manager_backend_java.exception.UnauthorizedException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,7 +20,7 @@ public class TransactionService {
 
     public Transaction addTransaction(Transaction transaction) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        transaction.setUser(user); // Assuming Transaction has a User field
+        transaction.setUser(user);
         return transactionRepository.save(transaction);
     }
 
@@ -29,9 +31,9 @@ public class TransactionService {
 
     public Transaction editTransaction(Long id, Transaction transactionDetails) {
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + id));
         if (!transaction.getUser().equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
-            throw new RuntimeException("Unauthorized to edit this transaction");
+            throw new UnauthorizedException("Unauthorized to edit this transaction");
         }
         transaction.setAmount(transactionDetails.getAmount());
         transaction.setType(transactionDetails.getType());
@@ -44,9 +46,9 @@ public class TransactionService {
 
     public void deleteTransaction(Long id) {
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + id));
         if (!transaction.getUser().equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
-            throw new RuntimeException("Unauthorized to delete this transaction");
+            throw new UnauthorizedException("Unauthorized to delete this transaction");
         }
         transactionRepository.delete(transaction);
     }

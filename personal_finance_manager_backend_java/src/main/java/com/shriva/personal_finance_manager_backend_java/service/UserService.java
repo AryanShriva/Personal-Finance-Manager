@@ -8,6 +8,7 @@ import com.shriva.personal_finance_manager_backend_java.model.User;
 import com.shriva.personal_finance_manager_backend_java.repository.RoleRepository;
 import com.shriva.personal_finance_manager_backend_java.repository.UserRepository;
 import com.shriva.personal_finance_manager_backend_java.util.JwtUtil;
+import com.shriva.personal_finance_manager_backend_java.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -61,7 +62,7 @@ public class UserService {
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             return jwtUtil.generateToken(user.getUsername(), user.getRole().getName());
         } catch (BadCredentialsException e) {
             throw new RuntimeException("Invalid username or password");
@@ -70,12 +71,12 @@ public class UserService {
 
     public User getUserProfile(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
     }
 
     public User updateUserProfile(String username, ProfileRequest request) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
             if (userRepository.existsByEmail(request.getEmail()) && !user.getEmail().equals(request.getEmail())) {
                 throw new RuntimeException("Email already exists");
