@@ -6,6 +6,9 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ApiService {
+  login(value: any) {
+    throw new Error('Method not implemented.');
+  }
   private apiUrl = 'http://localhost:8080/api';
   private headers = new HttpHeaders({
     'Authorization': 'Bearer temp-jwt-bypass-testuser3' // Replace with dynamic token later
